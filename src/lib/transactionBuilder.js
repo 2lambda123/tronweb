@@ -770,7 +770,7 @@ export default class TransactionBuilder {
         if(toHex(receiverAddress) === toHex(address)) {
             return callback('Receiver address must not be the same as owner address');
         }
-    
+
         const data = {
             owner_address: toHex(address),
             receiver_address: toHex(receiverAddress),
@@ -1514,7 +1514,7 @@ export default class TransactionBuilder {
         }
         createTransaction(
             this.tronWeb,
-            'TriggerSmartContract', 
+            'TriggerSmartContract',
             value,
             options.permissionId,
             {
@@ -1639,7 +1639,7 @@ export default class TransactionBuilder {
         this.tronWeb[options.confirmed ? 'solidityNode' : 'fullNode'].request(pathInfo, args, 'post').then(transaction => resultManagerTriggerSmartContract(transaction, args, options, callback)).catch(err => callback(err));
     }
 
-    clearABI(contractAddress, ownerAddress = this.tronWeb.defaultAddress.hex, options, callback = false) {     
+    clearABI(contractAddress, ownerAddress = this.tronWeb.defaultAddress.hex, options, callback = false) {
         if (utils.isFunction(options)) {
             callback = options;
             options = {};
@@ -1652,7 +1652,7 @@ export default class TransactionBuilder {
             options = ownerAddress;
             ownerAddress = this.tronWeb.defaultAddress.hex;
         }
-        
+
         if (!callback)
             return this.injectPromise(this.clearABI, contractAddress, ownerAddress, options);
 
@@ -2800,7 +2800,7 @@ export default class TransactionBuilder {
             }).catch((err) => callback('Error generating a new transaction id.'));
             return;
         }
-        
+
         this.tronWeb.fullNode
             .request(
                 'wallet/getsignweight',

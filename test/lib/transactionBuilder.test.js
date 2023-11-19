@@ -2376,7 +2376,7 @@ describe('TronWeb.transactionBuilder', function () {
             transactions.forEach(async (tx) => {
                 contracts.push(await broadcaster(null, accounts.pks[7], tx));
             });
-            
+
             while (true) {
                 const tx1 = await tronWeb.trx.getTransactionInfo(transactions[0].txID);
                 const tx2 = await tronWeb.trx.getTransactionInfo(transactions[1].txID);

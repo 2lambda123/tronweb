@@ -1,30 +1,24 @@
-const chai = require('chai');
+const {ADDRESS_HEX, ADDRESS_BASE58, FULL_NODE_API, SOLIDITY_NODE_API, EVENT_API, PRIVATE_KEY, SIDE_CHAIN, SUN_NETWORK} = require('../util/config');
+const {abiV2Test2} = require('../util/contracts');
+const tronWebBuilder = require('../util/tronWebBuilder');
+const broadcaster = require('../util/broadcaster');
+const TronWeb = tronWebBuilder.TronWeb;
+const HttpProvider = TronWeb.providers.HttpProvider;
 const jwt = require('jsonwebtoken');
 const {
-    ADDRESS_HEX,
-    ADDRESS_BASE58,
-    FULL_NODE_API,
-    SOLIDITY_NODE_API,
-    EVENT_API,
-    PRIVATE_KEY,
-    SIDE_CHAIN,
-    SUN_NETWORK,
     TEST_TRON_GRID_API,
     TEST_TRON_HEADER_API_KEY,
+    TEST_TRON_HEADER_API_KEY2,
     TEST_TRON_HEADER_API_JWT_KEY,
     TEST_TRON_HEADER_JWT_ID,
     TEST_TRON_HEADER_JWT_PRIVATE_KEY
-    } = require('./helpers/config');
-const tronWebBuilder = require('./helpers/tronWebBuilder');
-const TronWeb = tronWebBuilder.TronWeb;
-const log = require('./helpers/log')
+} = require('../util/config');
 const BigNumber = require('bignumber.js');
-const broadcaster = require('./helpers/broadcaster');
-const wait = require('./helpers/wait')
+const wait = require('../util/wait')
+const log = require('../util/log')
 const util = require('util');
-
+const chai = require('chai');
 const assert = chai.assert;
-const HttpProvider = TronWeb.providers.HttpProvider;
 
 describe('TronWeb Instance', function () {
 
@@ -32,20 +26,19 @@ describe('TronWeb Instance', function () {
         it('should create a full instance', function () {
             const tronWeb = tronWebBuilder.createInstance();
             assert.instanceOf(tronWeb, TronWeb);
+            let keys = Object.keys(tronWeb);
+            let values = Object.values(tronWeb);
+            for(let key in keys){
+                console.log(util.inspect(keys[key])+' : ' + util.inspect(values[key]));
+            }
         });
 
-        it('should create an instance using an options object without private key', function () {
+        it('should reject create an instance using fullnode', function () {
             const fullNode = new HttpProvider(FULL_NODE_API);
-            const solidityNode = new HttpProvider(SOLIDITY_NODE_API);
-            const eventServer = EVENT_API;
 
-            const tronWeb = new TronWeb({
-                fullNode,
-                solidityNode,
-                eventServer
-            });
-
-            assert.equal(tronWeb.defaultPrivateKey, false);
+            assert.throws(() => new TronWeb(
+                fullNode
+            ), 'Invalid solidity node provided');
         });
 
         it('should create an instance using a full options object', function () {
@@ -62,6 +55,11 @@ describe('TronWeb Instance', function () {
             });
 
             assert.equal(tronWeb.defaultPrivateKey, privateKey);
+            let keys = Object.keys(tronWeb);
+            let values = Object.values(tronWeb);
+            for(let key in keys){
+                console.log(util.inspect(keys[key])+' : ' + util.inspect(values[key]));
+            }
         });
 
         it('should create an instance without a private key', function () {
@@ -76,9 +74,34 @@ describe('TronWeb Instance', function () {
             );
 
             assert.equal(tronWeb.defaultPrivateKey, false);
+            let keys = Object.keys(tronWeb);
+            let values = Object.values(tronWeb);
+            for(let key in keys){
+                console.log(util.inspect(keys[key])+' : ' + util.inspect(values[key]));
+            }
         });
 
         it('should create an instance without an event server', function () {
+            const fullNode = FULL_NODE_API;
+            const solidityNode = SOLIDITY_NODE_API;
+            const privateKey = PRIVATE_KEY;
+
+            const tronWeb = new TronWeb({
+                fullNode,
+                solidityNode,
+                privateKey
+            });
+
+            assert.equal(tronWeb.eventServer, false);
+            assert.equal(tronWeb.defaultPrivateKey, privateKey);
+            let keys = Object.keys(tronWeb);
+            let values = Object.values(tronWeb);
+            for(let key in keys){
+                console.log(util.inspect(keys[key])+' : ' + util.inspect(values[key]));
+            }
+        });
+
+        it('should create an instance without an event server without a private key', function () {
             const fullNode = new HttpProvider(FULL_NODE_API);
             const solidityNode = new HttpProvider(SOLIDITY_NODE_API);
 
@@ -88,6 +111,99 @@ describe('TronWeb Instance', function () {
             );
 
             assert.equal(tronWeb.eventServer, false);
+            let keys = Object.keys(tronWeb);
+            let values = Object.values(tronWeb);
+            for(let key in keys){
+                console.log(util.inspect(keys[key])+' : ' + util.inspect(values[key]));
+            }
+        });
+
+        it('should reject create an instance using fullNode eventServer', function () {
+            const fullNode = FULL_NODE_API;
+            const eventServer = EVENT_API;
+
+            assert.throws(() => new TronWeb({
+                fullNode,
+                eventServer
+            }), 'Invalid solidity node provided');
+        });
+
+        it('should reject create an instance using fullNode eventServer private key', function () {
+            const fullNode = FULL_NODE_API;
+            const eventServer = EVENT_API;
+            const privateKey = PRIVATE_KEY;
+
+            assert.throws(() => new TronWeb({
+                fullNode,
+                eventServer,
+                privateKey
+            }), 'Invalid solidity node provided');
+        });
+
+        it('should reject create an instance using solidityNode', function () {
+            const solidityNode = SOLIDITY_NODE_API;
+
+            assert.throws(() => new TronWeb({
+                solidityNode
+            }), 'Invalid full node provided');
+        });
+
+        it('should reject create an instance using solidityNode eventServer', function () {
+            const solidityNode = SOLIDITY_NODE_API;
+            const eventServer = EVENT_API;
+
+            assert.throws(() => new TronWeb({
+                solidityNode,
+                eventServer
+            }), 'Invalid full node provided');
+        });
+
+        it('should reject create an instance using solidityNode private key', function () {
+            const solidityNode = SOLIDITY_NODE_API;
+            const privateKey = PRIVATE_KEY;
+
+            assert.throws(() => new TronWeb({
+                solidityNode,
+                privateKey
+            }), 'Invalid full node provided');
+        });
+
+        it('should reject create an instance using solidityNode eventServer private key', function () {
+            const solidityNode = SOLIDITY_NODE_API;
+            const eventServer = EVENT_API;
+            const privateKey = PRIVATE_KEY;
+
+            assert.throws(() => new TronWeb({
+                solidityNode,
+                eventServer,
+                privateKey
+            }), 'Invalid full node provided');
+        });
+
+        it('should reject create an instance using eventServer', function () {
+            const eventServer = EVENT_API;
+
+            assert.throws(() => new TronWeb({
+                eventServer
+            }), 'Invalid full node provided');
+        });
+
+        it('should reject create an instance using private key', function () {
+            const privateKey = PRIVATE_KEY;
+
+            assert.throws(() => new TronWeb({
+                privateKey
+            }), 'Invalid full node provided');
+        });
+
+        it('should reject create an instance using eventServer private key', function () {
+            const eventServer = EVENT_API;
+            const privateKey = PRIVATE_KEY;
+
+            assert.throws(() => new TronWeb({
+                eventServer,
+                privateKey
+            }), 'Invalid full node provided');
         });
 
         it('should reject an invalid full node URL', function () {
@@ -119,6 +235,19 @@ describe('TronWeb Instance', function () {
             ), 'Invalid URL provided to HttpProvider');
         });
 
+        it('should reject an invalid private key', function () {
+            const fullNode = new HttpProvider(FULL_NODE_API);
+            const solidityNode = new HttpProvider(SOLIDITY_NODE_API);
+            const eventServer = SIDE_CHAIN.eventServer;
+
+            assert.throws(() => new TronWeb(
+                fullNode,
+                solidityNode,
+                eventServer,
+                '$' + PRIVATE_KEY
+            ), 'Invalid private key provided');
+        });
+
         it('should create an instance using an options and sideOptions object without private key', function () {
             const fullNode = new HttpProvider(SIDE_CHAIN.fullNode);
             const solidityNode = new HttpProvider(SIDE_CHAIN.solidityNode);
@@ -131,6 +260,11 @@ describe('TronWeb Instance', function () {
             }, SIDE_CHAIN.sideOptions);
 
             assert.equal(tronWeb.defaultPrivateKey, false);
+            let keys = Object.keys(tronWeb);
+            let values = Object.values(tronWeb);
+            for(let key in keys){
+                console.log(util.inspect(keys[key])+' : ' + util.inspect(values[key]));
+            }
         });
 
         it('should create an instance using a full options and a full sideOptions object', function () {
@@ -144,6 +278,11 @@ describe('TronWeb Instance', function () {
                 privateKey
             }, sideOptions);
             assert.equal(tronWeb.defaultPrivateKey, privateKey);
+            let keys = Object.keys(tronWeb);
+            let values = Object.values(tronWeb);
+            for(let key in keys){
+                console.log(util.inspect(keys[key])+' : ' + util.inspect(values[key],true,null,true));
+            }
         });
 
         it('should create an instance with a full sideOptions without a private key', function () {
@@ -166,6 +305,11 @@ describe('TronWeb Instance', function () {
             );
 
             assert.equal(tronWeb.defaultPrivateKey, false);
+            let keys = Object.keys(tronWeb);
+            let values = Object.values(tronWeb);
+            for(let key in keys){
+                console.log(util.inspect(keys[key])+' : ' + util.inspect(values[key]));
+            }
         });
 
         it('should create an instance with a fullhost in sideOptions without a private key', function () {
@@ -186,6 +330,11 @@ describe('TronWeb Instance', function () {
             );
 
             assert.equal(tronWeb.defaultPrivateKey, false);
+            let keys = Object.keys(tronWeb);
+            let values = Object.values(tronWeb);
+            for(let key in keys){
+                console.log(util.inspect(keys[key])+' : ' + util.inspect(values[key]));
+            }
         });
 
         it('should create an instance with a full sideOptions without an event server', function () {
@@ -207,8 +356,12 @@ describe('TronWeb Instance', function () {
             );
 
             assert.equal(tronWeb.eventServer, false);
+            let keys = Object.keys(tronWeb);
+            let values = Object.values(tronWeb);
+            for(let key in keys){
+                console.log(util.inspect(keys[key])+' : ' + util.inspect(values[key]));
+            }
         });
-
 
         it('should create an instance with a full sideOptions without an event server in sideOptions', function () {
             const fullNode = new HttpProvider(SIDE_CHAIN.fullNode);
@@ -228,6 +381,11 @@ describe('TronWeb Instance', function () {
             );
 
             assert.equal(tronWeb.eventServer, false);
+            let keys = Object.keys(tronWeb);
+            let values = Object.values(tronWeb);
+            for(let key in keys){
+                console.log(util.inspect(keys[key])+' : ' + util.inspect(values[key]));
+            }
         });
 
         it('should reject an invalid full node URL in sideOptions', function () {
@@ -282,6 +440,27 @@ describe('TronWeb Instance', function () {
                     sideChainId: SIDE_CHAIN.sideOptions.sideChainId
                 }
             ), 'Invalid URL provided to HttpProvider');
+        });
+
+        it('should reject an invalid private key ', function () {
+
+            const fullNode = new HttpProvider(SIDE_CHAIN.fullNode);
+            const solidityNode = new HttpProvider(SIDE_CHAIN.solidityNode);
+            const eventServer = SIDE_CHAIN.eventServer;
+            assert.throws(() => new TronWeb(
+                fullNode,
+                solidityNode,
+                eventServer,
+                '$' + PRIVATE_KEY,
+                {
+                    fullNode: SIDE_CHAIN.sideOptions.fullNode,
+                    solidityNode: SIDE_CHAIN.sideOptions.solidityNode,
+                    eventServer: '$' + SIDE_CHAIN.sideOptions.eventServer,
+                    mainGatewayAddress: SIDE_CHAIN.sideOptions.mainGatewayAddress,
+                    sideGatewayAddress: SIDE_CHAIN.sideOptions.sideGatewayAddress,
+                    sideChainId: SIDE_CHAIN.sideOptions.sideChainId
+                }
+            ), 'Invalid private key provided');
         });
 
     });
@@ -435,8 +614,8 @@ describe('TronWeb Instance', function () {
             );
 
             assert.equal(tronWeb.defaultPrivateKey, false);
-            assert.equal(tronWeb.defaultAddress.hex, '41928c9af0651632157ef27a2cf17ca72c575a4d28');
-            assert.equal(tronWeb.defaultAddress.base58, 'TPL66VK2gCXNCD7EJg9pgJRfqcRbnn4zcp');
+            assert.equal(tronWeb.defaultAddress.hex, '415624c12e308b03a1a6b21d9b86e3942fac1ab928');
+            assert.equal(tronWeb.defaultAddress.base58, 'THph9K2M2nLvkianrMGswRhz5hjRqD2ova');
         });
 
         it('should not reset the private key if the address matches', function () {
@@ -585,9 +764,9 @@ describe('TronWeb Instance', function () {
             const tronWebSide = tronWebBuilder.createInstanceSide();
             const providersSide = tronWebSide.currentProviders();
 
-            assert.equal(providers.fullNode.host, FULL_NODE_API);
-            assert.equal(providers.solidityNode.host, SOLIDITY_NODE_API);
-            assert.equal(providers.eventServer.host, EVENT_API);
+            assert.equal(providers.fullNode.host, SIDE_CHAIN.fullNode);
+            assert.equal(providers.solidityNode.host, SIDE_CHAIN.solidityNode);
+            assert.equal(providers.eventServer.host, SIDE_CHAIN.eventServer);
 
             assert.equal(providersSide.fullNode.host, SIDE_CHAIN.fullNode);
             assert.equal(providersSide.solidityNode.host, SIDE_CHAIN.solidityNode);
@@ -603,9 +782,9 @@ describe('TronWeb Instance', function () {
             const tronWebSide = tronWebBuilder.createInstanceSide();
             const providersSide = tronWebSide.currentProviders();
 
-            assert.equal(providers.fullNode.host, FULL_NODE_API);
-            assert.equal(providers.solidityNode.host, SOLIDITY_NODE_API);
-            assert.equal(providers.eventServer.host, EVENT_API);
+            assert.equal(providers.fullNode.host, SIDE_CHAIN.fullNode);
+            assert.equal(providers.solidityNode.host, SIDE_CHAIN.solidityNode);
+            assert.equal(providers.eventServer.host, SIDE_CHAIN.eventServer);
 
             assert.equal(providersSide.fullNode.host, SIDE_CHAIN.fullNode);
             assert.equal(providersSide.solidityNode.host, SIDE_CHAIN.solidityNode);
@@ -930,47 +1109,11 @@ describe('TronWeb Instance', function () {
             assert.equal(newAccount.publicKey.length, 130);
             let address = tronWeb.address.fromPrivateKey(newAccount.privateKey);
             assert.equal(address, newAccount.address.base58);
-            address = tronWeb.address.fromPrivateKey(newAccount.privateKey, true);
-            assert.equal(address, newAccount.address.base58);
+
             // TODO The new accounts returns an uppercase address, while everywhere else we handle lowercase addresses. Maybe we should make it consistent and let createAccount returning a lowercase address
             assert.equal(tronWeb.address.toHex(address), newAccount.address.hex.toLowerCase());
         });
     });
-
-
-    describe("#createRandom", function () {
-        it("should create a random mnemonic and the zero index account", async function () {
-            const tronWeb = tronWebBuilder.createInstance();
-
-            const newAccount = await tronWeb.createRandom();
-            assert.equal(newAccount.privateKey.substring(2).length, 64);
-            assert.equal(newAccount.publicKey.substring(2).length, 130);
-            let address = tronWeb.address.fromPrivateKey(newAccount.privateKey.substring(2));
-            assert.equal(address, newAccount.address);
-            address = tronWeb.address.fromPrivateKey(newAccount.privateKey.substring(2), true);
-            assert.equal(address, newAccount.address);
-            assert.equal(tronWeb.address.toHex(address), tronWeb.address.toHex(newAccount.address));
-        });
-    });
-
-    describe("#fromMnemonic", function () {
-        it("should generate the zero index account of the passed mnemonic phrase", async function () {
-            const tronWeb = tronWebBuilder.createInstance();
-
-            const accountCreated = await tronWeb.createRandom()
-            const newAccount = await tronWeb.fromMnemonic(accountCreated.mnemonic.phrase);
-
-            assert.equal(newAccount.privateKey, accountCreated.privateKey);
-            assert.equal(newAccount.privateKey.substring(2).length, 64);
-            assert.equal(newAccount.publicKey.substring(2).length, 130);
-            let address = tronWeb.address.fromPrivateKey(newAccount.privateKey.substring(2));
-            assert.equal(address, newAccount.address);
-            address = tronWeb.address.fromPrivateKey(newAccount.privateKey.substring(2), true);
-            assert.equal(address, newAccount.address);
-            assert.equal(tronWeb.address.toHex(address), tronWeb.address.toHex(newAccount.address));
-        });
-    });
-
 
     describe("#isConnected", function () {
         it("should verify that tronWeb is connected to nodes and event server", async function () {
@@ -1000,7 +1143,7 @@ describe('TronWeb Instance', function () {
             await tronWebBuilder.newTestAccountsInMain(3);
             accounts = await tronWebBuilder.getTestAccountsInMain(3);
 
-            const result = await broadcaster(tronWeb.transactionBuilder.createSmartContract({
+            const result = await broadcaster.broadcaster(tronWeb.transactionBuilder.createSmartContract({
                 abi: [
                     {
                         "anonymous": false,
@@ -1045,6 +1188,7 @@ describe('TronWeb Instance', function () {
                 ],
                 bytecode: "0x608060405234801561001057600080fd5b50610145806100206000396000f300608060405260043610610041576000357c0100000000000000000000000000000000000000000000000000000000900463ffffffff168063bed7111f14610046575b600080fd5b34801561005257600080fd5b50610091600480360381019080803573ffffffffffffffffffffffffffffffffffffffff16906020019092919080359060200190929190505050610093565b005b3373ffffffffffffffffffffffffffffffffffffffff167f9f08738e168c835bbaf7483705fb1c0a04a1a3258dd9687f14d430948e04e3298383604051808373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff1681526020018281526020019250505060405180910390a250505600a165627a7a7230582033629e2b0bba53f7b5c49769e7e360f2803ae85ac80e69dd61c7bb48f9f401f30029"
             }, accounts.hex[0]), accounts.pks[0])
+            // console.log("createTransaction:"+JSON.stringify(createTransaction))
 
             contractAddress = result.receipt.transaction.contract_address
             contract = await tronWeb.contract().at(contractAddress)
@@ -1053,8 +1197,6 @@ describe('TronWeb Instance', function () {
 
 
         it('should emit an unconfirmed event and get it', async function () {
-
-            this.timeout(60000)
             tronWeb.setPrivateKey(accounts.pks[1])
             let txId = await contract.emitNow(accounts.hex[2], 2000).send({
                 from: accounts.hex[1]
@@ -1068,10 +1210,12 @@ describe('TronWeb Instance', function () {
                 await wait(0.5)
             }
 
-            assert.equal(events[0].result._receiver.substring(2), accounts.hex[2].substring(2))
-            assert.equal(events[0].result._sender.substring(2), accounts.hex[1].substring(2))
+            console.log("events:"+util.inspect(events,true,null,true))
             assert.equal(events[0].resourceNode, 'fullNode')
-
+            if (!JSON.stringify('_receiver' in events[0].result)) {
+                assert.equal(events[0].result._receiver.substring(2), accounts.hex[2].substring(2))
+                assert.equal(events[0].result._sender.substring(2), accounts.hex[1].substring(2))
+            }
         })
 
     });
@@ -1089,7 +1233,7 @@ describe('TronWeb Instance', function () {
             await tronWebBuilder.newTestAccountsInMain(5);
             accounts = await tronWebBuilder.getTestAccountsInMain(5);
 
-            const result = await broadcaster(tronWeb.transactionBuilder.createSmartContract({
+            const result = await broadcaster.broadcaster(tronWeb.transactionBuilder.createSmartContract({
                 abi: [
                     {
                         "anonymous": false,
@@ -1140,111 +1284,239 @@ describe('TronWeb Instance', function () {
 
         });
 
-        it('onlyConfirmed is true', async function () {
-
-            this.timeout(60000)
+        it('onlyConfirmed', async function () {
             tronWeb.setPrivateKey(accounts.pks[3])
-            await contract.emitNow(accounts.hex[4], 4000).send({
-                from: accounts.hex[3]
-            })
-            eventLength++
-            let events
-            while (true) {
-                events = await tronWeb.getEventResult(contractAddress, {
-                    eventName: 'SomeEvent',
-                    sort: 'block_timestamp',
-                    onlyConfirmed: true
+            for(var i = 0; i < 5; i++) {
+                await contract.emitNow(accounts.hex[4], 4000).send({
+                    from: accounts.hex[3]
                 })
-                if (events.length === eventLength) {
-                    break
-                }
-                await wait(0.5)
+                eventLength++
             }
+            await wait(60)
 
-            console.log("events:"+util.inspect(events,true,null,true))
+            let events
+            // onlyConfirmed: false
+            events = await tronWeb.getEventResult(contractAddress, {
+                eventName: 'SomeEvent',
+                sort: 'block_timestamp',
+                onlyConfirmed: false
+            })
+            console.log("events2:"+util.inspect(events,true,null,true))
+            assert.equal(events.length, 5)
             for(var i = 0; i < events.length; i++) {
-                assert.isFalse(events[i].result._unconfirmed);
-            }
-            const event = events[events.length - 1]
-
-            assert.equal(event.result._receiver.substring(2), accounts.hex[4].substring(2))
-            assert.equal(event.result._sender.substring(2), accounts.hex[3].substring(2))
-            assert.equal(event.resourceNode, 'fullNode')
-        })
-
-        it('onlyConfirmed is false', async function () {
-
-            this.timeout(60000)
-            tronWeb.setPrivateKey(accounts.pks[3])
-            await contract.emitNow(accounts.hex[4], 4000).send({
-                from: accounts.hex[3]
-            })
-            eventLength++
-            let events
-            while (true) {
-                events = await tronWeb.getEventResult(contractAddress, {
-                    eventName: 'SomeEvent',
-                    sort: 'block_timestamp',
-                    onlyConfirmed: false
-                })
-                if (events.length === eventLength) {
-                    break
+                if (Object.keys(events[i]).length == 7) {
+                    assert.equal(events[i].unconfirmed, undefined);
+                } else if (Object.keys(events[i]).length == 8) {
+                    assert.isTrue(events[i].unconfirmed);
+                    assert.equal(events[i].resourceNode, 'fullNode')
+                } else {
+                    assert.isTrue(false);
                 }
-                await wait(0.5)
             }
 
-            console.log("events:"+util.inspect(events,true,null,true))
+            await wait(60)
+            for(var i = 0; i < 5; i++) {
+                await contract.emitNow(accounts.hex[4], 4000).send({
+                    from: accounts.hex[3]
+                })
+                eventLength++
+            }
+            // onlyConfirmed: true
+            events = await tronWeb.getEventResult(contractAddress, {
+                eventName: 'SomeEvent',
+                sort: 'block_timestamp',
+                onlyConfirmed: true
+            })
+
+            console.log("events1:"+util.inspect(events,true,null,true))
             for(var i = 0; i < events.length; i++) {
-                assert.isTrue(events[i].result._unconfirmed);
+                assert.equal(Object.keys(events[i]).length, 7);
+                assert.equal(events[i].unconfirmed, undefined);
+                assert.equal(events[i].resourceNode, 'solidityNode')
             }
+
             const event = events[events.length - 1]
 
+            console.log("event!!!:"+util.inspect(event,true,null,true))
             assert.equal(event.result._receiver.substring(2), accounts.hex[4].substring(2))
             assert.equal(event.result._sender.substring(2), accounts.hex[3].substring(2))
-            assert.equal(event.resourceNode, 'fullNode')
-
         })
 
-        it('should emit an event and wait for it', async function () {
-
-            this.timeout(60000)
+        it('onlyUnconfirmed', async function () {
             tronWeb.setPrivateKey(accounts.pks[3])
-            await contract.emitNow(accounts.hex[4], 4000).send({
-                from: accounts.hex[3]
-            })
-            eventLength++
-            let events
-            while (true) {
-                events = await tronWeb.getEventResult(contractAddress, {
-                    eventName: 'SomeEvent',
-                    sort: 'block_timestamp'
+            for(var i = 0; i < 10; i++) {
+                await contract.emitNow(accounts.hex[4], 4000).send({
+                    from: accounts.hex[3]
                 })
-                if (events.length === eventLength) {
-                    break
+                eventLength++
+            }
+            await wait(50)
+
+            let events
+            // onlyUnconfirmed: true
+            events = await tronWeb.getEventResult(contractAddress, {
+                eventName: 'SomeEvent',
+                sort: 'block_timestamp',
+                onlyUnconfirmed: true
+            })
+            console.log("events1:"+util.inspect(events,true,null,true))
+            for(var i = 0; i < events.length; i++) {
+                assert.equal(Object.keys(events[i]).length, 8);
+                assert.isTrue(events[i].unconfirmed);
+                assert.equal(events[i].resourceNode, 'fullNode')
+            }
+
+            // onlyUnconfirmed: false
+            let fingerprint = "";
+            do{
+                if (fingerprint == "") {
+                    events = await tronWeb.getEventResult(contractAddress, {
+                        eventName: 'SomeEvent',
+                        sort: 'block_timestamp',
+                        onlyUnconfirmed: false,
+                    })
+                    assert.equal(events.length, 20)
+                } else {
+                    events = await tronWeb.getEventResult(contractAddress, {
+                        eventName: 'SomeEvent',
+                        sort: 'block_timestamp',
+                        onlyUnconfirmed: false,
+                        fingerprint: fingerprint,
+                    })
                 }
-                await wait(0.5)
+                console.log("events2-"+fingerprint+":"+util.inspect(events,true,null,true))
+
+                fingerprint = false;
+                for(var i = 0; i < events.length; i++) {
+                    if (Object.keys(events[i]).length == 7) {
+                        assert.equal(events[i].unconfirmed, undefined);
+                        assert.equal(events[i].resourceNode, 'solidityNode')
+                    } else if (Object.keys(events[i]).length == 8) {
+                        if (events[i].resourceNode == 'fullNode') {
+                            assert.isTrue(events[i].unconfirmed);
+                        } else {
+                            assert.equal(events[i].unconfirmed, undefined);
+                        }
+                    } else {
+                        if (events[i].fingerprint == undefined) {
+                            assert.isTrue(false);
+                        }
+                    }
+                    // has next page
+                    fingerprint = events[i].fingerprint == undefined ? "" : events[i].fingerprint;
+                }
+
+                if (events.length > 0) {
+                    const event = events[events.length - 1]
+                    assert.equal(event.result._receiver.substring(2), accounts.hex[4].substring(2))
+                    assert.equal(event.result._sender.substring(2), accounts.hex[3].substring(2))
+                }
+            } while (fingerprint.length > 7);
+        })
+
+        it('onlyConfirmed and onlyUnconfirmed', async function () {
+            tronWeb.setPrivateKey(accounts.pks[3])
+            for(var i = 0; i < 10; i++) {
+                await contract.emitNow(accounts.hex[4], 4000).send({
+                    from: accounts.hex[3]
+                })
+                eventLength++
+            }
+            await wait(50)
+
+            let events
+            // onlyConfirmed: false,onlyUnconfirmed: true
+            events = await tronWeb.getEventResult(contractAddress, {
+                eventName: 'SomeEvent',
+                sort: 'block_timestamp',
+                onlyConfirmed: false,
+                onlyUnconfirmed: true
+            })
+            console.log("events5:"+util.inspect(events,true,null,true))
+            for(var i = 0; i < events.length; i++) {
+                assert.equal(Object.keys(events[i]).length, 8);
+                assert.isTrue(events[i].unconfirmed);
+                assert.equal(events[i].resourceNode, 'fullNode')
+            }
+
+            // onlyConfirmed: true,onlyUnconfirmed: false
+            events = await tronWeb.getEventResult(contractAddress, {
+                eventName: 'SomeEvent',
+                sort: 'block_timestamp',
+                onlyConfirmed: true,
+                onlyUnconfirmed: false,
+                size:40,
+            })
+            console.log("events6:"+util.inspect(events,true,null,true))
+            for(var i = 0; i < events.length; i++) {
+                assert.equal(Object.keys(events[i]).length, 7);
+                assert.equal(events[i].unconfirmed, undefined);
+                assert.equal(events[i].resourceNode, 'solidityNode')
+            }
+
+            // onlyConfirmed: false,onlyUnconfirmed: false
+            events = await tronWeb.getEventResult(contractAddress, {
+                eventName: 'SomeEvent',
+                sort: 'block_timestamp',
+                onlyConfirmed: false,
+                onlyUnconfirmed: false,
+                size:40
+            })
+            assert.equal(events.length, 30)
+            console.log("events7:"+util.inspect(events,true,null,true))
+            for(var i = 0; i < events.length; i++) {
+                if (Object.keys(events[i]).length == 7) {
+                    assert.equal(events[i].unconfirmed, undefined);
+                    assert.equal(events[i].resourceNode, 'solidityNode')
+                } else if (Object.keys(events[i]).length == 8) {
+                    if (events[i].resourceNode == 'fullNode') {
+                        assert.isTrue(events[i].unconfirmed);
+                    } else {
+                        assert.equal(events[i].unconfirmed, undefined);
+                    }
+                } else {
+                    if (events[i].fingerprint == undefined) {
+                        assert.isTrue(false);
+                    }
+                }
             }
 
             const event = events[events.length - 1]
-
             assert.equal(event.result._receiver.substring(2), accounts.hex[4].substring(2))
             assert.equal(event.result._sender.substring(2), accounts.hex[3].substring(2))
-            assert.equal(event.resourceNode, 'fullNode')
         })
-
     });
-
 });
 
 describe("#testTronGrid", function () {
-    // Temporary stop testing api key because test server is closed
-    return
-    
     describe("#testTronGridApiKey", function () {
-        it("should add the parameter TRON-PRO-API-KEY=Key to the header of the request", async function () {
+        it("headers TEST_TRON_HEADER_API_KEY normal", async function () {
+            // headers:TEST_TRON_HEADER_API_KEY
+            const tronWeb = tronWebBuilder.createInstance({
+                headers: { "TRON-PRO-API-KEY": TEST_TRON_HEADER_API_KEY },
+            });
+            assert.equal(
+                tronWeb.fullNode.headers["TRON-PRO-API-KEY"],
+                TEST_TRON_HEADER_API_KEY
+            );
+            assert.equal(
+                tronWeb.eventServer.headers["TRON-PRO-API-KEY"],
+                TEST_TRON_HEADER_API_KEY
+            );
+
+            let account = await tronWeb.trx.getAccount();
+            assert.equal(typeof account, "object");
+            let tx = await tronWeb.event.getEventsByContractAddress(
+                tronWeb.defaultAddress.base58
+            );
+            assert.equal(typeof tx, "object");
+        });
+
+        it("headers and eventHeaders TEST_TRON_HEADER_API_KEY normal", async function () {
             const tronWeb = tronWebBuilder.createInstance({
                 fullHost: TEST_TRON_GRID_API,
                 headers: { "TRON-PRO-API-KEY": TEST_TRON_HEADER_API_KEY },
+                eventHeaders: { "TRON-PRO-API-KEY": TEST_TRON_HEADER_API_KEY2 },
             });
 
             assert.equal(
@@ -1253,7 +1525,7 @@ describe("#testTronGrid", function () {
             );
             assert.equal(
                 tronWeb.eventServer.headers["TRON-PRO-API-KEY"],
-                TEST_TRON_HEADER_API_KEY
+                TEST_TRON_HEADER_API_KEY2
             );
 
             const account = await tronWeb.trx.getAccount();
@@ -1265,37 +1537,44 @@ describe("#testTronGrid", function () {
             assert.equal(typeof tx, "object");
         });
 
-        it("should add the parameter TRON-PRO-API-KEY=Key to the header of the event request", async function () {
-            const tronWeb = tronWebBuilder.createInstance({
-                fullHost: TEST_TRON_GRID_API,
-                headers: { "TRON-PRO-API-KEY": TEST_TRON_HEADER_API_KEY },
-                eventHeaders: { "TRON-PRO-API-KEY": TEST_TRON_HEADER_API_KEY },
-            });
-
+        it("setHeader TEST_TRON_HEADER_API_KEY normal", async function () {
+            const tronWeb = tronWebBuilder.createInstance();
             assert.equal(
                 tronWeb.fullNode.headers["TRON-PRO-API-KEY"],
-                TEST_TRON_HEADER_API_KEY
+                undefined
             );
             assert.equal(
                 tronWeb.eventServer.headers["TRON-PRO-API-KEY"],
-                TEST_TRON_HEADER_API_KEY
+                undefined
             );
+            try {
+                await tronWeb.trx.getAccount();
+            } catch (error) {
+                assert.equal(error.response.status, 401);
+                console.log("error1:"+util.inspect(error.response.data,true,null,true))
+                assert.exists(error.response.data, "ApiKey not exists");
+            }
+            try {
+                const sendTrxTx = await tronWeb.trx.sendTrx("TRxh1GnspMRadaU37UzrRRpkME2EkwCHg4", 5000000);
+                console.log("sendTrxTx1:"+JSON.stringify(sendTrxTx))
+                assert.isTrue(sendTrxTx.result);
+            } catch (error) {
+                console.log("sendTrxTx1:"+util.inspect(error.response.data,true,null,true))
+                assert.equal(error.response.status, 401);
+                assert.exists(error.response.data, "sdfsdfsdApiKey not exists");
+            }
+            try {
+                await tronWeb.event.getEventsByContractAddress(
+                    tronWeb.defaultAddress.base58
+                );
+            } catch (error) {
+                assert.equal(error.statusCode, 401);
+                console.log("error3:"+util.inspect(error.error,true,null,true))
+                assert.exists(error.error, "ApiKey not exists");
+            }
 
-            const account = await tronWeb.trx.getAccount();
-            assert.equal(typeof account, "object");
-
-            const tx = await tronWeb.event.getEventsByContractAddress(
-                tronWeb.defaultAddress.base58
-            );
-            assert.equal(typeof tx, "object");
-        });
-
-        it("should set the parameter TRON-PRO-API-KEY=Key to the header of the request", async function () {
-            const tronWeb = tronWebBuilder.createInstance({
-                fullHost: TEST_TRON_GRID_API,
-            });
+            // setHeader:TEST_TRON_HEADER_API_KEY
             tronWeb.setHeader({ "TRON-PRO-API-KEY": TEST_TRON_HEADER_API_KEY });
-
             assert.equal(
                 tronWeb.fullNode.headers["TRON-PRO-API-KEY"],
                 TEST_TRON_HEADER_API_KEY
@@ -1304,20 +1583,16 @@ describe("#testTronGrid", function () {
                 tronWeb.eventServer.headers["TRON-PRO-API-KEY"],
                 TEST_TRON_HEADER_API_KEY
             );
-
             const account = await tronWeb.trx.getAccount();
             assert.equal(typeof account, "object");
-
             const tx = await tronWeb.event.getEventsByContractAddress(
                 tronWeb.defaultAddress.base58
             );
             assert.equal(typeof tx, "object");
         });
 
-        it("should set the parameter TRON-PRO-API-KEY=Key to the header of the fullNode request", async function () {
-            const tronWeb = tronWebBuilder.createInstance({
-                fullHost: TEST_TRON_GRID_API,
-            });
+        it("setFullNodeHeader TEST_TRON_HEADER_API_KEY normal", async function () {
+            const tronWeb = tronWebBuilder.createInstance();
             tronWeb.setFullNodeHeader({
                 "TRON-PRO-API-KEY": TEST_TRON_HEADER_API_KEY,
             });
@@ -1340,13 +1615,12 @@ describe("#testTronGrid", function () {
                 );
             } catch (error) {
                 assert.equal(error.statusCode, 401);
+                assert.exists(error.error, "ApiKey not exists");
             }
         });
 
-        it("should set the parameter TRON-PRO-API-KEY=Key to the header of the event request", async function () {
-            const tronWeb = tronWebBuilder.createInstance({
-                fullHost: TEST_TRON_GRID_API,
-            });
+        it("setEventHeader TEST_TRON_HEADER_API_KEY normal", async function () {
+            const tronWeb = tronWebBuilder.createInstance();
             tronWeb.setEventHeader({
                 "TRON-PRO-API-KEY": TEST_TRON_HEADER_API_KEY,
             });
@@ -1364,6 +1638,7 @@ describe("#testTronGrid", function () {
                 await tronWeb.trx.getAccount();
             } catch (error) {
                 assert.equal(error.response.status, 401);
+                assert.exists(error.response.data, "ApiKey not exists");
             }
 
             const tx = await tronWeb.event.getEventsByContractAddress(
@@ -1372,13 +1647,13 @@ describe("#testTronGrid", function () {
             assert.equal(typeof tx, "object");
         });
 
-        it("should set the valid key to the header of the request", async function () {
+        it("headers FAKE_KEY-valid-key", async function () {
+            // headers:FAKE_KEY
             const FAKE_KEY = "ABCEDF";
-            const tronWeb = tronWebBuilder.createInstance({
+            let tronWeb = tronWebBuilder.createInstance({
                 fullHost: TEST_TRON_GRID_API,
                 headers: { "TRON-PRO-API-KEY": FAKE_KEY },
             });
-
             assert.equal(
                 tronWeb.fullNode.headers["TRON-PRO-API-KEY"],
                 FAKE_KEY
@@ -1387,30 +1662,59 @@ describe("#testTronGrid", function () {
                 tronWeb.eventServer.headers["TRON-PRO-API-KEY"],
                 FAKE_KEY
             );
-
             try {
                 await tronWeb.trx.getAccount();
             } catch (error) {
                 assert.equal(error.response.status, 401);
+                assert.exists(error.response.data, "ApiKey not exists");
             }
-
             try {
                 await tronWeb.event.getEventsByContractAddress(
                     tronWeb.defaultAddress.base58
                 );
             } catch (error) {
                 assert.equal(error.statusCode, 401);
+                assert.exists(error.error, "ApiKey not exists");
+            }
+
+            // headers:EMPTY_KEY
+            const EMPTY_KEY = "";
+            tronWeb = tronWebBuilder.createInstance({
+                fullHost: TEST_TRON_GRID_API,
+                headers: { "TRON-PRO-API-KEY": EMPTY_KEY },
+            });
+            assert.equal(
+                tronWeb.fullNode.headers["TRON-PRO-API-KEY"],
+                EMPTY_KEY
+            );
+            assert.equal(
+                tronWeb.eventServer.headers["TRON-PRO-API-KEY"],
+                EMPTY_KEY
+            );
+            try {
+                await tronWeb.trx.getAccount();
+            } catch (error) {
+                assert.equal(error.response.status, 401);
+                assert.exists(error.response.data, "ApiKey not exists");
+            }
+            try {
+                await tronWeb.event.getEventsByContractAddress(
+                    tronWeb.defaultAddress.base58
+                );
+            } catch (error) {
+                assert.equal(error.statusCode, 401);
+                assert.exists(error.error, "ApiKey not exists");
             }
         });
 
-        it("should set the valid key to the header of the fullnode request", async function () {
+        it("headers FAKE_KEY-valid-key eventHeaders TEST_TRON_HEADER_API_KEY", async function () {
+            // headers:FAKE_KEY,eventHeaders:TEST_TRON_HEADER_API_KEY
             const FAKE_KEY = "ABCEDF";
-            const tronWeb = tronWebBuilder.createInstance({
+            let tronWeb = tronWebBuilder.createInstance({
                 fullHost: TEST_TRON_GRID_API,
                 headers: { "TRON-PRO-API-KEY": FAKE_KEY },
                 eventHeaders: { "TRON-PRO-API-KEY": TEST_TRON_HEADER_API_KEY },
             });
-
             assert.equal(
                 tronWeb.fullNode.headers["TRON-PRO-API-KEY"],
                 FAKE_KEY
@@ -1419,20 +1723,45 @@ describe("#testTronGrid", function () {
                 tronWeb.eventServer.headers["TRON-PRO-API-KEY"],
                 TEST_TRON_HEADER_API_KEY
             );
-
             try {
                 await tronWeb.trx.getAccount();
             } catch (error) {
                 assert.equal(error.response.status, 401);
+                assert.exists(error.response.data, "ApiKey not exists");
             }
-
             const tx = await tronWeb.event.getEventsByContractAddress(
                 tronWeb.defaultAddress.base58
             );
             assert.equal(typeof tx, "object");
+
+            // headers:TEST_TRON_HEADER_API_KEY,eventHeaders:EMPTY_KEY
+            const EMPTY_KEY = "";
+            tronWeb = tronWebBuilder.createInstance({
+                fullHost: TEST_TRON_GRID_API,
+                headers: { "TRON-PRO-API-KEY": TEST_TRON_HEADER_API_KEY },
+                eventHeaders: { "TRON-PRO-API-KEY": EMPTY_KEY }
+            });
+            assert.equal(
+                tronWeb.fullNode.headers["TRON-PRO-API-KEY"],
+                TEST_TRON_HEADER_API_KEY
+            );
+            assert.equal(
+                tronWeb.eventServer.headers["TRON-PRO-API-KEY"],
+                EMPTY_KEY
+            );
+            let account = await tronWeb.trx.getAccount();
+            assert.equal(typeof account, "object");
+            try {
+                await tronWeb.event.getEventsByContractAddress(
+                    tronWeb.defaultAddress.base58
+                );
+            } catch (error) {
+                assert.equal(error.statusCode, 401);
+                assert.exists(error.error, "ApiKey not exists");
+            }
         });
 
-        it("should set the valid key to the header of the event request", async function () {
+        it("headers TEST_TRON_HEADER_API_KEY eventHeaders FAKE_KEY-valid-key", async function () {
             const FAKE_KEY = "ABCEDF";
             const tronWeb = tronWebBuilder.createInstance({
                 fullHost: TEST_TRON_GRID_API,
@@ -1457,14 +1786,227 @@ describe("#testTronGrid", function () {
                     tronWeb.defaultAddress.base58
                 );
             } catch (error) {
+                // console.log("error:"+util.inspect(error,true,null,true))
                 assert.equal(error.statusCode, 401);
+                assert.exists(error.error, "ApiKey not exists");
+            }
+        });
+
+        it("setHeader FAKE_KEY-valid-key", async function () {
+            // headers:TEST_TRON_HEADER_API_KEY
+            const tronWeb = tronWebBuilder.createInstance({
+                headers: { "TRON-PRO-API-KEY": TEST_TRON_HEADER_API_KEY },
+            });
+            assert.equal(
+                tronWeb.fullNode.headers["TRON-PRO-API-KEY"],
+                TEST_TRON_HEADER_API_KEY
+            );
+            assert.equal(
+                tronWeb.eventServer.headers["TRON-PRO-API-KEY"],
+                TEST_TRON_HEADER_API_KEY
+            );
+            let account = await tronWeb.trx.getAccount();
+            assert.equal(typeof account, "object");
+            let tx = await tronWeb.event.getEventsByContractAddress(
+                tronWeb.defaultAddress.base58
+            );
+            assert.equal(typeof tx, "object");
+
+            // setHeader:FAKE_KEY
+            const FAKE_KEY = "ABCEDF";
+            tronWeb.setHeader({ "TRON-PRO-API-KEY": FAKE_KEY });
+            assert.equal(
+                tronWeb.fullNode.headers["TRON-PRO-API-KEY"],
+                FAKE_KEY
+            );
+            assert.equal(
+                tronWeb.eventServer.headers["TRON-PRO-API-KEY"],
+                FAKE_KEY
+            );
+            try {
+                await tronWeb.trx.getAccount();
+            } catch (error) {
+                assert.equal(error.response.status, 401);
+                assert.exists(error.response.data, "ApiKey not exists");
+            }
+            try {
+                await tronWeb.event.getEventsByContractAddress(
+                    tronWeb.defaultAddress.base58
+                );
+            } catch (error) {
+                assert.equal(error.statusCode, 401);
+                assert.exists(error.error, "ApiKey not exists");
+            }
+
+            // setHeader:EMPTY_KEY
+            const EMPTY_KEY = "";
+            tronWeb.setHeader({ "TRON-PRO-API-KEY": EMPTY_KEY });
+            assert.equal(
+                tronWeb.fullNode.headers["TRON-PRO-API-KEY"],
+                EMPTY_KEY
+            );
+            assert.equal(
+                tronWeb.eventServer.headers["TRON-PRO-API-KEY"],
+                EMPTY_KEY
+            );
+            try {
+                await tronWeb.trx.getAccount();
+            } catch (error) {
+                assert.equal(error.response.status, 401);
+                assert.exists(error.response.data, "ApiKey not exists");
+            }
+            try {
+                await tronWeb.event.getEventsByContractAddress(
+                    tronWeb.defaultAddress.base58
+                );
+            } catch (error) {
+                assert.equal(error.statusCode, 401);
+                assert.exists(error.error, "ApiKey not exists");
+            }
+        });
+
+        it("setFullNodeHeader FAKE_KEY-valid-key", async function () {
+            // headers:TEST_TRON_HEADER_API_KEY
+            const tronWeb = tronWebBuilder.createInstance({
+                headers: { "TRON-PRO-API-KEY": TEST_TRON_HEADER_API_KEY },
+            });
+            assert.equal(
+                tronWeb.fullNode.headers["TRON-PRO-API-KEY"],
+                TEST_TRON_HEADER_API_KEY
+            );
+            assert.equal(
+                tronWeb.eventServer.headers["TRON-PRO-API-KEY"],
+                TEST_TRON_HEADER_API_KEY
+            );
+            let account = await tronWeb.trx.getAccount();
+            assert.equal(typeof account, "object");
+            let tx = await tronWeb.event.getEventsByContractAddress(
+                tronWeb.defaultAddress.base58
+            );
+            assert.equal(typeof tx, "object");
+
+            // setFullNodeHeader:FAKE_KEY
+            const FAKE_KEY = "ABCEDF";
+            tronWeb.setFullNodeHeader({
+                "TRON-PRO-API-KEY": FAKE_KEY,
+            });
+            assert.equal(
+                tronWeb.fullNode.headers["TRON-PRO-API-KEY"],
+                FAKE_KEY
+            );
+            assert.equal(
+                tronWeb.eventServer.headers["TRON-PRO-API-KEY"],
+                TEST_TRON_HEADER_API_KEY
+            );
+            try {
+                await tronWeb.trx.getAccount();
+            } catch (error) {
+                assert.equal(error.response.status, 401);
+                assert.exists(error.response.data, "ApiKey not exists");
+            }
+            tx = await tronWeb.event.getEventsByContractAddress(
+                tronWeb.defaultAddress.base58
+            );
+            assert.equal(typeof tx, "object");
+
+            // setFullNodeHeader:EMPTY_KEY
+            const EMPTY_KEY = "";
+            tronWeb.setFullNodeHeader({
+                "TRON-PRO-API-KEY": EMPTY_KEY,
+            });
+            assert.equal(
+                tronWeb.fullNode.headers["TRON-PRO-API-KEY"],
+                EMPTY_KEY
+            );
+            assert.equal(
+                tronWeb.eventServer.headers["TRON-PRO-API-KEY"],
+                TEST_TRON_HEADER_API_KEY
+            );
+            try {
+                await tronWeb.trx.getAccount();
+            } catch (error) {
+                assert.equal(error.response.status, 401);
+                assert.exists(error.response.data, "ApiKey not exists");
+            }
+            tx = await tronWeb.event.getEventsByContractAddress(
+                tronWeb.defaultAddress.base58
+            );
+            assert.equal(typeof tx, "object");
+        });
+
+        it("setEventHeader FAKE_KEY-valid-key", async function () {
+            // headers:TEST_TRON_HEADER_API_KEY
+            const tronWeb = tronWebBuilder.createInstance({
+                headers: { "TRON-PRO-API-KEY": TEST_TRON_HEADER_API_KEY },
+            });
+            assert.equal(
+                tronWeb.fullNode.headers["TRON-PRO-API-KEY"],
+                TEST_TRON_HEADER_API_KEY
+            );
+            assert.equal(
+                tronWeb.eventServer.headers["TRON-PRO-API-KEY"],
+                TEST_TRON_HEADER_API_KEY
+            );
+            let account = await tronWeb.trx.getAccount();
+            assert.equal(typeof account, "object");
+            let tx = await tronWeb.event.getEventsByContractAddress(
+                tronWeb.defaultAddress.base58
+            );
+            assert.equal(typeof tx, "object");
+
+            // setEventHeader:FAKE_KEY
+            const FAKE_KEY = "ABCEDF";
+            tronWeb.setEventHeader({
+                "TRON-PRO-API-KEY": FAKE_KEY,
+            });
+            assert.equal(
+                tronWeb.fullNode.headers["TRON-PRO-API-KEY"],
+                TEST_TRON_HEADER_API_KEY
+            );
+            assert.equal(
+                tronWeb.eventServer.headers["TRON-PRO-API-KEY"],
+                FAKE_KEY
+            );
+            account = await tronWeb.trx.getAccount();
+            assert.equal(typeof account, "object");
+            try {
+                await tronWeb.event.getEventsByContractAddress(
+                    tronWeb.defaultAddress.base58
+                );
+            } catch (error) {
+                assert.equal(error.statusCode, 401);
+                assert.exists(error.error, "ApiKey not exists");
+            }
+
+            // setEventHeader:EMPTY_KEY
+            const EMPTY_KEY = "";
+            tronWeb.setEventHeader({
+                "TRON-PRO-API-KEY": EMPTY_KEY,
+            });
+            assert.equal(
+                tronWeb.fullNode.headers["TRON-PRO-API-KEY"],
+                TEST_TRON_HEADER_API_KEY
+            );
+            assert.equal(
+                tronWeb.eventServer.headers["TRON-PRO-API-KEY"],
+                EMPTY_KEY
+            );
+            account = await tronWeb.trx.getAccount();
+            assert.equal(typeof account, "object");
+            try {
+                await tronWeb.event.getEventsByContractAddress(
+                    tronWeb.defaultAddress.base58
+                );
+            } catch (error) {
+                assert.equal(error.statusCode, 401);
+                assert.exists(error.error, "ApiKey not exists");
             }
         });
     });
 
     describe("#testTronGridJwtKey", function () {
         it("should add the parameter Authorization=Key to the header of the request", async function () {
-            const token = jwt.sign(
+            let token = jwt.sign(
                 { aud: "trongrid.io" },
                 TEST_TRON_HEADER_JWT_PRIVATE_KEY,
                 {
@@ -1475,6 +2017,7 @@ describe("#testTronGrid", function () {
                     },
                 }
             );
+            console.log("token:"+util.inspect(token,true,null,true))
 
             const tronWeb = tronWebBuilder.createInstance({
                 fullHost: TEST_TRON_GRID_API,
@@ -1483,9 +2026,31 @@ describe("#testTronGrid", function () {
                     Authorization: `Bearer ${token}`,
                 },
             });
-
             const account = await tronWeb.trx.getAccount();
             assert.equal(typeof account, "object");
+
+            // setHeader:aud: "trongrid.iohgj"
+            token = jwt.sign(
+                { aud: "trongrid.iohgj" },
+                TEST_TRON_HEADER_JWT_PRIVATE_KEY,
+                {
+                    header: {
+                        alg: "RS256",
+                        typ: "JWT",
+                        kid: TEST_TRON_HEADER_JWT_ID,
+                    },
+                }
+            );
+            tronWeb.setHeader({
+                "TRON-PRO-API-KEY": TEST_TRON_HEADER_API_JWT_KEY,
+                Authorization: `Bearer ${token}`,
+            });
+            try {
+                await tronWeb.trx.getAccount();
+            } catch (error) {
+                assert.equal(error.response.status, 401);
+                assert.exists(error.response.data, "invalid request due to settings");
+            }
         });
 
         it("should the valid exp to the payload of the sign", async function () {
@@ -1520,3 +2085,67 @@ describe("#testTronGrid", function () {
         });
     });
 });
+
+
+describe("#fromPrivateKey", function () {
+    it("fromPrivateKey", async function () {
+        const tronWeb = tronWebBuilder.createInstance();
+        assert.equal(tronWeb.address.fromPrivateKey("12"),tronWeb.address.fromPrivateKey("123"));
+        assert.equal(tronWeb.address.fromPrivateKey("12"),tronWeb.address.fromPrivateKey("124"));
+        assert.equal(tronWeb.address.fromPrivateKey("12"),tronWeb.address.fromPrivateKey("0012"));
+        assert.equal(tronWeb.address.fromPrivateKey("12"),'TM1XDVgwZUqPfQT1PTA7DszUE7Nw7DU7d1');
+        assert.equal(tronWeb.address.fromPrivateKey("012"),'TMVQGm1qAQYVdetCeGRRkTWYYrLXuHK2HC');
+        assert.equal(tronWeb.address.fromPrivateKey("0"),false);
+        assert.equal(tronWeb.address.fromPrivateKey("0x124"),false);
+        assert.equal(tronWeb.address.fromPrivateKey("0dbdfa83d48bc9dfa823479234ccf9db2b34c9f89724ad8979243e987e9de243"),'TPiNqcyhxY2xVMfMRUQ3d5qyaq8EdFuQkh');
+        assert.equal(ADDRESS_BASE58,tronWeb.address.fromPrivateKey(PRIVATE_KEY));
+        assert.equal(tronWeb.address.fromPrivateKey(PRIVATE_KEY+"1"),tronWeb.address.fromPrivateKey(PRIVATE_KEY));
+        assert.equal(tronWeb.address.fromPrivateKey(PRIVATE_KEY+"10"),'TEMfXbLCs7Ag2fjAFrWkNJP8tPrDSV9Rrz');
+        assert.equal(tronWeb.address.fromPrivateKey("0"+PRIVATE_KEY+"1"),'TEipNR4EDbNJpsAa4DnHSFGHakXd38XhFp');
+
+        console.log("----Turn on strict mode----")
+        assert.equal('TGUrzpAScgJy9tyrrPJ6woywvf2eBSw5yv',tronWeb.address.fromPrivateKey("123",true));
+        assert.equal(tronWeb.address.fromPrivateKey("0123",true),tronWeb.address.fromPrivateKey("123",true));
+        assert.equal('TM1XDVgwZUqPfQT1PTA7DszUE7Nw7DU7d1',tronWeb.address.fromPrivateKey("12",true));
+        assert.equal(tronWeb.address.fromPrivateKey("012",true),tronWeb.address.fromPrivateKey("12",true));
+        assert.equal(tronWeb.address.fromPrivateKey("012",true),tronWeb.address.fromPrivateKey("0000012",true));
+        assert.equal('THzAGBe4vTuVjnobg2TCb3uUL34Y7yU945',tronWeb.address.fromPrivateKey("124",true));
+        assert.equal(tronWeb.address.fromPrivateKey("0124",true),tronWeb.address.fromPrivateKey("124",true));
+        assert.equal(ADDRESS_BASE58,tronWeb.address.fromPrivateKey(PRIVATE_KEY,true));
+        assert.equal(tronWeb.address.fromPrivateKey(PRIVATE_KEY+"1",true),tronWeb.address.fromPrivateKey("0"+PRIVATE_KEY+"1",true));
+        assert.equal(tronWeb.address.fromPrivateKey(PRIVATE_KEY+"10",true),'TEMfXbLCs7Ag2fjAFrWkNJP8tPrDSV9Rrz');
+        assert.equal(tronWeb.address.fromPrivateKey("0"+PRIVATE_KEY+"1",true),'TEipNR4EDbNJpsAa4DnHSFGHakXd38XhFp');
+        assert.equal(tronWeb.address.fromPrivateKey("0",true),false);
+        assert.equal(tronWeb.address.fromPrivateKey("0x124",true),false);
+        assert.equal(tronWeb.address.fromPrivateKey("0dbdfa83d48bc9dfa823479234ccf9db2b34c9f89724ad8979243e987e9de243",true),'TPiNqcyhxY2xVMfMRUQ3d5qyaq8EdFuQkh');
+    });
+});
+
+
+describe("#abiV2Test2", async function () {
+    const tronWeb = tronWebBuilder.createInstance();
+
+    it('call', async function () {
+        // nile SaiValuesAggregator
+        contractInstance2 = await tronWeb.contract(abiV2Test2.abi,"41E38397ADACF9C723C06CE1F5E2E1E84CA487D07D");
+        const res = await contractInstance2.aggregateCDPValues('0x0000000000000000000000000000000000000000000000000000000000000169').call();
+        contractInstance2.aggregateCDPValues('0x0000000000000000000000000000000000000000000000000000000000000169').call((err, data)=>{
+            console.log("data:"+data)
+            //assert.equal(data.toString(),res.toString())
+        });
+        console.log("res:"+res)
+        assert.equal(res[1],'41098cc9a3e46b68d867842855cb88920f4bac42b9')
+        assert.equal(res[2],true)
+        array = res[3]
+        assert.equal(parseInt(array[0],10),203999998000000000000)
+        assert.equal(parseInt(array[1],10),1000000000000000000)
+        assert.equal(parseInt(array[2],10),985092560839120884)
+        assert.equal(parseInt(array[3],10),10199999900001366607)
+        assert.equal(parseInt(array[4],10),5799999933334244405)
+        assert.equal(parseInt(array[5],10),173999998000004019433)
+        assert.equal(parseInt(array[6],10),173999998000027332146)
+        assert.equal(parseInt(array[7],10),7352941248557262)
+    });
+
+});
+

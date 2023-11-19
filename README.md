@@ -203,16 +203,16 @@ __5.1.0__
 - Add `getDelegatedResourceV2`, `getDelegatedResourceAccountIndexV2`, `getCanDelegatedMaxSize`, `getAvailableUnfreezeCount` and `getCanWithdrawUnfreezeAmount` function to query account resource info
 
 __5.0.0__
-- Add `tronWeb.utils.transaction` lib to serialize and deserialize transaction 
+- Add `tronWeb.utils.transaction` lib to serialize and deserialize transaction
 - Add `tronWeb.utils.transaction.txJsonToPb` function to convert transaction json to protobuf
 - Add `tronWeb.utils.transaction.txPbToTxID` function to get txID from transaction protobuf
-- Support new transaction builder `createAccount` 
+- Support new transaction builder `createAccount`
 
 __4.4.0__
 - Support `createRandom` and `fromMnemonic` function
 - Add `tronWeb.utils.message` lib, which includes `hashMessage`, `signMessage` and `verifyMessage`
 - Add `signMessageV2` and `verifyMessageV2` in `tronWeb.trx` lib which can support plain text signature and verification
-- Add `size` filter for event watch 
+- Add `size` filter for event watch
 
 __4.3.0__
 - Support `_signTypedData`
